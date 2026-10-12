@@ -248,7 +248,7 @@
     if (!list.length) { root.innerHTML = '<div class="pdf-empty">먼저 문헌을 선택하세요.</div>'; $('#pdf-library').textContent = ''; return; }
     root.innerHTML = list.map((p, i) => {
       const ref = `R${i + 1}`; const file = state.pdfs.get(p.id);
-      return `<label class="pdf-attach-row"><b>[${ref}] ${esc(p.title)}</b><small>${file ? `${esc(file.name)} · 텍스트 ${file.text.length.toLocaleString()}자 추출${file.truncated ? ' · 앞 15,000자만 AI에 전송' : ''}` : '원문 PDF 선택 (선택 사항)'}</small><input type="file" accept="application/pdf,.pdf" data-pdf-id="${esc(p.id)}" aria-label="${ref} 문헌 원문 PDF 연결"></label>`;
+      return `<div class="pdf-attach-row"><label><b>[${ref}] ${esc(p.title)}</b><small>${file ? `${esc(file.name)} · 텍스트 ${file.text.length.toLocaleString()}자 추출${file.truncated ? ' · 앞 15,000자만 AI에 전송' : ''}` : '원문 PDF 선택 (선택 사항)'}<input type="file" accept="application/pdf,.pdf" data-pdf-id="${esc(p.id)}" aria-label="${ref} 문헌 원문 PDF 연결"></small></label>${file ? `<button class="pdf-remove" type="button" data-pdf-remove="${esc(p.id)}">PDF 연결 해제</button>` : ''}</div>`;
     }).join('');
     $$('[data-pdf-id]').forEach(input => input.addEventListener('change', async () => {
       const file = input.files?.[0]; if (!file) return;
@@ -271,6 +271,7 @@
         renderPdfAttachments(); setPdfMessage(`${file.name} · ${doc.numPages}쪽 중 앞 ${maxPages}쪽에서 ${full.length.toLocaleString()}자 추출 · AI 요청에는 편당 최대 ${maxChars.toLocaleString()}자만 포함합니다.`);
       } catch (error) { setPdfMessage(`${file.name}: ${error.message}`, true); input.disabled = false; }
     }));
+    $$('[data-pdf-remove]').forEach(button => button.addEventListener('click', () => { state.pdfs.delete(button.dataset.pdfRemove); renderPdfAttachments(); setPdfMessage('PDF 연결을 해제했습니다.'); }));
     const attached = list.filter(p => state.pdfs.has(p.id));
     $('#pdf-library').textContent = attached.length ? `${attached.length}편의 PDF 텍스트가 현재 탭 메모리에 연결되어 있습니다. 파일 자체는 서버에 업로드되지 않습니다.` : '';
   }
@@ -307,7 +308,7 @@
     const from = snapshot?.from ?? (Number($('#from-year').value) || ''); const to = snapshot?.to ?? (Number($('#to-year').value) || '');
     if (from && to && from > to) { setStatus('시작 연도는 종료 연도보다 늦을 수 없습니다.', 'error'); return; }
     const requestId = ++state.requestSequence;
-    if (page === 0) { state.records = []; state.selected.clear(); state.page = 0; state.lastDraft = ''; state.reviewNotes = []; $('#chapter-output').value = ''; }
+    if (page === 0) { state.records = []; state.selected.clear(); state.pdfs.clear(); state.page = 0; state.lastDraft = ''; state.reviewNotes = []; $('#chapter-output').value = ''; }
     $('#search-button').disabled = true;
     setStatus(`${page ? '다음 페이지를' : 'Crossref와 OpenAlex에'} ${queries.length}개 검색식을 보내 실제 논문 정보를 조회하는 중입니다.`, 'loading');
     $('#results').innerHTML = `<div class="empty-state"><span class="spinner"></span><b>학술 API 검색 중</b><p>검색원별 결과를 받아 DOI·제목 기준으로 합칩니다.</p></div>`;
