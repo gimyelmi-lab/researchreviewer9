@@ -259,16 +259,17 @@
         if (!window.pdfjsLib) throw new Error('PDF 텍스트 읽기 모듈을 불러오지 못했습니다. 인터넷 연결을 확인한 뒤 새로고침해 주세요.');
         window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         const doc = await window.pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
-        const fragments = []; let chars = 0; const maxChars = 15000; const maxPages = Math.min(doc.numPages, 120);
+        const fragments = []; let chars = 0; let pagesRead = 0; const maxChars = 15000; const maxPages = Math.min(doc.numPages, 120);
         for (let page = 1; page <= maxPages && chars < maxChars; page++) {
+          pagesRead = page;
           const pageText = await (await doc.getPage(page)).getTextContent();
           const text = pageText.items.map(item => item.str || '').join(' ').replace(/\s+/g, ' ').trim();
           if (text) { fragments.push(text); chars += text.length; }
         }
         const full = fragments.join('\n').trim();
         if (!full) throw new Error('텍스트를 찾지 못했습니다. 이미지 스캔 PDF는 OCR을 지원하지 않습니다.');
-        state.pdfs.set(id, { name: file.name, text: full.slice(0, maxChars), chars: full.length, pages: maxPages, truncated: full.length > maxChars || doc.numPages > maxPages });
-        renderPdfAttachments(); setPdfMessage(`${file.name} · ${doc.numPages}쪽 중 앞 ${maxPages}쪽에서 ${full.length.toLocaleString()}자 추출 · AI 요청에는 편당 최대 ${maxChars.toLocaleString()}자만 포함합니다.`);
+        state.pdfs.set(id, { name: file.name, text: full.slice(0, maxChars), chars: full.length, pages: pagesRead, totalPages: doc.numPages, truncated: full.length > maxChars || pagesRead < doc.numPages });
+        renderPdfAttachments(); setPdfMessage(`${file.name} · ${doc.numPages}쪽 중 ${pagesRead}쪽에서 ${full.length.toLocaleString()}자 추출 · AI 요청에는 편당 최대 ${maxChars.toLocaleString()}자만 포함합니다.`);
       } catch (error) { setPdfMessage(`${file.name}: ${error.message}`, true); input.disabled = false; }
     }));
     $$('[data-pdf-remove]').forEach(button => button.addEventListener('click', () => { state.pdfs.delete(button.dataset.pdfRemove); renderPdfAttachments(); setPdfMessage('PDF 연결을 해제했습니다.'); }));
