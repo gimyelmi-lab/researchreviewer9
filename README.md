@@ -1,13 +1,26 @@
-# BIM → 로봇 시뮬레이션 문헌 검색 시제품
+# BIM → 로봇 시뮬레이션 문헌 탐색기
 
-이 저장소는 학위논문 2장 선행연구고찰을 위한 웹 시제품입니다.
+학위논문 2장 선행연구고찰을 위한 정적 웹 시제품입니다.
 
-## 실행
+## 작업 흐름
 
-- `index.html`을 열면 실제 문헌 검색 화면으로 이동합니다.
-- `live-search.html`은 Crossref API에서 논문 서지정보를 검색합니다.
-- 검색어는 Crossref에 전송됩니다. 논문 파일 업로드나 AI 원문 분석은 지원하지 않습니다.
+1. `index.html`은 새 워크스페이스인 `reviewers.html`로 연결됩니다.
+2. Crossref와 OpenAlex API를 검색하고 결과를 DOI/제목 기준으로 합칩니다.
+3. 결과별 주제 분류, 초록 근거, 서지 링크, 공개 PDF 링크를 확인하고 검토할 논문을 선택합니다.
+4. 선택 문헌마다 원문 PDF를 연결할 수 있습니다. PDF 텍스트는 브라우저에서 추출하고, Gemini 요청에 앞부분 최대 15,000자만 포함합니다.
+5. 선택 문헌으로 분야별 4개 리뷰어 관점 분석과 인용 연결 2장 초안을 생성합니다.
+6. Gemini API 키가 없으면 AI 검토 대신 공개 초록과 자동 분류를 사용한 근거 구조표를 만들 수 있습니다.
 
-## GitHub Pages로 공개하기
+## 배포·접속
 
-저장소의 **Settings → Pages**에서 **Deploy from a branch**를 선택하고 `main` 브랜치의 `/(root)` 폴더를 지정하면 됩니다. 저장 후 공개 주소는 보통 `https://gimyelmi-lab.github.io/researchreviewer9/` 형태입니다.
+- 공개 워크스페이스: https://gimyelmi-lab.github.io/researchreviewer9/reviewers.html
+- 사이트 홈: https://gimyelmi-lab.github.io/researchreviewer9/
+- 코드는 `index.html`, `reviewers.html`, `app.css`, `app.js`에 있습니다.
+
+## 데이터와 분석 범위
+
+- 검색어와 연도 조건은 Crossref/OpenAlex로 전송됩니다. 실제 반환된 API 기록만 결과로 표시합니다.
+- 논문별 한 줄 안내는 제공된 초록 문장을 우선 사용하고, 초록이 없으면 제목·키워드 기반 분류만 합니다.
+- Gemini 검토를 실행하면 선택 문헌의 서지정보·초록과 연결 PDF의 추출 발췌가 Google Gemini API로 전송됩니다. 입력한 키와 PDF 파일 자체는 서버에 저장되지 않으며, 키는 새로고침하면 사라집니다.
+- 검색 API에 전문이 없으면 전문을 읽은 것처럼 쓰지 않습니다. 원문 분석은 출판사/DOI 또는 오픈액세스 링크를 확인해야 합니다.
+- 이 정적 시제품에는 서버 측 AI 키 관리가 없습니다. 다수 사용자를 대상으로 운영할 SaaS는 별도 백엔드와 인증·비용 제한 구성이 필요합니다.

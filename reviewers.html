@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#173d34">
+  <meta name="description" content="실제 학술 API에서 논문을 찾고, 선택 문헌을 근거로 학위논문 2장 초안을 구성합니다.">
+  <title>Literature Reviewers · 문헌 탐색과 2장 작성</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="Literature Reviewers 홈"><span class="brand-mark">L</span><span><b>Literature Reviewers</b><small>CM · BIM TO ROBOT SIMULATION</small></span></a>
+      <span class="live-pill"><i></i> LIVE ACADEMIC SEARCH</span>
+    </header>
+
+    <section class="hero">
+      <div class="eyebrow">THESIS CHAPTER 02 · RESEARCH WORKSPACE</div>
+      <h1>찾은 문헌을,<br><em>근거 있는 2장 초안으로.</em></h1>
+      <p>학술 API에서 실제 문헌을 검색하고, 연구 주제와 초록을 확인한 뒤, 선택한 자료만으로 선행연구고찰을 구성합니다.</p>
+    </section>
+
+    <section class="workflow" aria-label="작업 단계">
+      <div class="step active" data-step="search"><span>01</span><b>문헌 탐색</b><small>Crossref · OpenAlex</small></div>
+      <div class="step" data-step="select"><span>02</span><b>문헌 선택</b><small>주제·초록·접근 링크</small></div>
+      <div class="step" data-step="write"><span>03</span><b>2장 정리</b><small>4개 전문 관점 검토</small></div>
+    </section>
+
+    <aside class="trust-note"><b>검색과 해석의 근거를 표시합니다.</b><span>검색은 Crossref와 OpenAlex의 실시간 서지 API를 사용합니다. 논문별 한 줄 안내는 공개 초록에서 뽑은 문장 또는 제목·주제 키워드에 근거합니다. 초록을 원문 전문처럼 취급하지 않으며, 2장 초안의 인용은 선택 문헌 ID와 DOI 링크로 연결합니다.</span></aside>
+
+    <section class="panel search-panel" id="search-panel">
+      <div class="panel-heading"><div><div class="eyebrow">01 / DISCOVER</div><h2>연구 주제와 검색 범위</h2><p>국문 주제와 영문 보충어를 각각 검색합니다. DOI나 제목이 같은 결과는 합칩니다.</p></div><span class="source-mark">2 LIVE SOURCES</span></div>
+      <form id="search-form">
+        <div class="form-grid">
+          <label class="field span-2"><span>연구 주제 · 국문 검색어</span><input id="topic" required maxlength="240" value="BIM 정보를 로봇 물리 시뮬레이션 환경으로 전환" placeholder="예: BIM 기반 건설 로봇 시뮬레이션"></label>
+          <label class="field span-2"><span>영문 검색어 · 동의어 포함</span><input id="keywords" maxlength="300" value="BIM IFC robot Gazebo simulation robotics digital twin" placeholder="BIM IFC robot Gazebo simulation"></label>
+          <label class="field"><span>시작 연도</span><input id="from-year" type="number" min="1900" max="2100" value="2016"></label>
+          <label class="field"><span>종료 연도</span><input id="to-year" type="number" min="1900" max="2100" value="2026"></label>
+          <label class="field source-choice"><span>검색원</span><span class="checkline"><input type="checkbox" id="source-crossref" checked><span>Crossref</span><input type="checkbox" id="source-openalex" checked><span>OpenAlex</span></span></label>
+          <div class="field actions"><span class="field-label">실시간 검색</span><button class="button primary" id="search-button" type="submit">논문 찾기 <span>↗</span></button></div>
+        </div>
+        <p class="helper">논문 검색 API는 연구 주제·검색어·연도만 받습니다. AI 검토를 실행하기 전에는 어떤 자료도 생성형 AI 서비스로 전송되지 않습니다.</p>
+      </form>
+      <div class="status" id="search-status" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="metrics" aria-label="검색 요약">
+      <article class="metric"><span>검색된 문헌</span><b id="metric-results">—</b></article>
+      <article class="metric"><span>초록 확인 가능</span><b id="metric-abstracts">—</b></article>
+      <article class="metric"><span>오픈액세스 PDF 링크</span><b id="metric-pdfs">—</b></article>
+      <article class="metric"><span>선택 문헌</span><b id="metric-selected">0</b></article>
+    </section>
+
+    <nav class="tabs" aria-label="작업 보기">
+      <button class="tab active" data-view="results">검색 결과 <span id="tab-results-count">0</span></button>
+      <button class="tab" data-view="selected">선택 문헌 <span id="tab-selected-count">0</span></button>
+      <button class="tab" data-view="chapter">2장 초안 만들기</button>
+      <button class="tab" data-view="history">검색 로그</button>
+    </nav>
+
+    <section class="view active" id="view-results">
+      <div class="result-toolbar"><div><h2>검색 결과</h2><p id="result-summary">검색 범위를 입력하고 논문 찾기를 눌러 주세요.</p></div><div class="toolbar-actions"><label class="filter-label">주제 분류<select id="theme-filter"><option value="all">전체 주제</option><option value="conversion">BIM·IFC 정보 변환</option><option value="environment">로봇 환경 생성</option><option value="physics">물리·충돌·동역학</option><option value="case">건설·시설 사례</option><option value="evaluation">평가·검증·방법론</option></select></label><button class="button" id="select-visible" disabled>표시 결과 선택</button><button class="button" id="clear-selection" disabled>선택 해제</button></div></div>
+      <div class="cards" id="results"><div class="empty-state"><div class="empty-icon">⌕</div><b>실제 문헌 검색을 시작해 보세요</b><p>검색 결과에는 논문별 연구 주제 안내, 초록 근거, DOI와 가능한 원문 링크가 표시됩니다.</p></div></div>
+    </section>
+
+    <section class="view" id="view-selected">
+      <div class="result-toolbar"><div><h2>선택한 문헌</h2><p>2장 초안에 포함할 문헌을 검토하고, 원문 링크를 확인하세요.</p></div><div class="toolbar-actions"><button class="button" id="export-ris" disabled>RIS 내보내기</button><button class="button" id="export-selected-md" disabled>문헌 목록 저장</button></div></div>
+      <div id="selected-list" class="selected-grid"><div class="empty-state"><div class="empty-icon">＋</div><b>검색 결과에서 논문을 선택하세요</b><p>선택 문헌만 비교하고 2장 초안을 만듭니다.</p></div></div>
+      <div class="selection-footer"><span id="selection-limit">문헌 선택 수 제한은 없습니다. AI 분석은 한 번에 최대 12편을 권장합니다.</span><button class="button primary" id="go-chapter" disabled>선택 문헌으로 2장 정리 →</button></div>
+    </section>
+
+    <section class="view" id="view-chapter">
+      <div class="result-toolbar"><div><h2>선택 문헌으로 2장 정리</h2><p id="chapter-count">먼저 검색 결과에서 검토할 문헌을 선택하세요.</p></div></div>
+      <div class="chapter-layout">
+        <aside class="chapter-settings">
+          <div class="eyebrow">REVIEWER WORKFLOW</div><h3>분야별 리뷰어 검토</h3>
+          <p class="muted">선택 문헌을 네 관점으로 나눠 검토한 뒤, 인용 ID를 유지해 한글 2장 초안을 통합합니다.</p>
+          <div class="reviewer-list">
+            <div><span>01</span><b>BIM·IFC 변환 리뷰어</b><small>형상·공간·속성 정보와 변환 흐름</small></div>
+            <div><span>02</span><b>로봇 환경 리뷰어</b><small>ROS·URDF·SDF·Gazebo와 환경 구성</small></div>
+            <div><span>03</span><b>물리 시뮬레이션 리뷰어</b><small>충돌·질량·관성·접촉·센서·파라미터</small></div>
+            <div><span>04</span><b>사례·검증 리뷰어</b><small>건설 사례·평가 지표·현장 검증</small></div>
+          </div>
+          <section class="pdf-section"><div class="pdf-heading"><b>선택 문헌 원문 PDF</b><span>선택 · 분석 근거 보강</span></div><p>PDF를 문헌별로 연결하면 텍스트를 이 브라우저에서 추출합니다. Gemini 분석 시 연결한 본문 발췌(최대 15,000자/편)와 초록이 함께 전송됩니다.</p><div id="pdf-attachments" class="pdf-attachments"><div class="pdf-empty">먼저 문헌을 선택하세요.</div></div><div id="pdf-library" class="pdf-library" aria-live="polite"></div></section>
+          <div class="api-box"><label class="field"><span>Gemini API 키 <small>선택 · AI 리뷰어 사용</small></span><input id="gemini-key" type="password" autocomplete="off" placeholder="Google AI Studio 키 입력"></label><label class="field model-field"><span>모델</span><input id="gemini-model" value="gemini-3.8-flash" autocomplete="off"></label><p>키는 이 브라우저에만 두고 새로고침하면 지웁니다. AI 검토 시 선택 문헌의 서지정보·초록과 연결한 PDF 발췌가 Google Gemini로 전송됩니다. 서버에는 저장되지 않습니다.</p><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio에서 키 받기 ↗</a></div>
+          <button class="button primary generate-button" id="generate-chapter" disabled>근거 기반 2장 초안 생성</button>
+          <button class="button secondary generate-button" id="generate-scaffold" disabled>AI 키 없이 문헌 구조표 만들기</button>
+          <p class="fineprint">AI 초안은 검색 API가 제공한 서지정보와 초록에 근거합니다. 원문 전문이나 페이지를 확인한 결과가 아니며, 전문 분석처럼 인용하거나 결과 수치를 만들어내지 않도록 설계했습니다.</p>
+        </aside>
+        <div class="chapter-output-wrap">
+          <div class="output-heading"><div><div class="eyebrow">EVIDENCE-LINKED DRAFT</div><h3>2장 선행연구고찰 초안</h3></div><button class="button" id="download-chapter" disabled>Markdown 저장</button></div>
+          <div class="generation-status" id="generation-status" role="status" aria-live="polite"></div>
+          <div class="reviewer-progress" id="reviewer-progress"></div>
+          <textarea id="chapter-output" class="chapter-output" placeholder="문헌을 선택한 뒤 초안을 생성하세요. AI 키 없이도 선택 문헌의 초록과 주제 분류를 묶은 구조표를 만들 수 있습니다." spellcheck="false"></textarea>
+          <details class="reviewer-notes" id="reviewer-notes"><summary>전문 리뷰어별 근거 검토 보기</summary><div id="reviewer-notes-content"></div></details>
+          <div class="evidence-footnote">인용 ID 예: <b>[R1]</b> · 아래 문헌 목록에서 해당 논문의 DOI, 초록 제공 여부, 오픈액세스 경로를 확인할 수 있습니다. 자동 생성된 문장을 논문에 사용하기 전 원문에서 연구방법·결과·페이지를 대조하세요.</div>
+          <div id="chapter-bibliography" class="chapter-bibliography"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="view-history">
+      <div class="result-toolbar"><div><h2>검색 로그</h2><p>실행한 검색식·검색원·반환 결과 수를 기록합니다.</p></div><button class="button" id="download-log" disabled>로그 저장</button></div>
+      <div class="log-list" id="search-log"><div class="empty-state"><b>검색 기록이 아직 없습니다</b></div></div>
+    </section>
+
+    <footer class="footer"><div><b>Literature Reviewers</b><span>학술 탐색은 Crossref · OpenAlex API, AI 검토는 사용자가 제공한 Gemini API 키를 사용합니다.</span></div><a href="https://github.com/gimyelmi-lab/researchreviewer9" target="_blank" rel="noopener">프로젝트 저장소 ↗</a></footer>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
+  <script src="app.js" defer></script>
+</body>
+</html>
